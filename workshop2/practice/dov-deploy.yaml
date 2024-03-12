@@ -56,8 +56,11 @@ spec:
   type: ClusterIP
   selector:
     app: dov
-    name: dov-po
+    env: test
   ports:
   - name: svc-web-port
     port: 5000
     targetPort: web-port
+  - name: svc-metric-port
+    port: 5100
+    targetPort: metric-port
