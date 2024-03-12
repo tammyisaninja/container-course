@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Pod 
+metadata:
+  name: dov-po
+  namespace: my-namespace
+  labels:
+    app: dov
+    env: test
+spec:
+  containers:
+  - name: dov-container
+    image: tammyisaninja/dov-bear:latest
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: INSTANCE_NAME
+      value: dov pod
+    - name: INSTANCE_HASH
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['app']
+    ports:
+    - name: web-port
+      containerPort: 3000
+    - name: metrics-port
+      containerPort: 3100
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: web-port
+      periodSeconds: 30
+      initialDelaySeconds: 5
