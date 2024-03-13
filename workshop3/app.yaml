@@ -1,0 +1,90 @@
+
+apiVersion: apps/v1
+kind: Deployment  
+metadata: 
+  name: code-server-deploy
+  namespace: tammy-code-server 
+  labels:
+    app: code-server
+    name: code-server-deploy
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: code-server 
+      name: code-server-po 
+  template: 
+    metadata:
+      name: code-server-po 
+      labels:
+        app: code-server 
+        name: code-server-po 
+    spec:
+      volumes:
+        - name: code-server-volume
+          persistentVolumeClaim:
+            claimName: code-server-pvc 
+      containers: 
+      - name: code-server-container
+        image: linuxserver/code-server:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: code-server-volume
+          mountPath: /data   # Mount path in the container
+        env:
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: code-server-secret
+              key: PASSWORD
+        - name: SUDO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: code-server-secret
+              key: SUDO_PASSWORD
+        envFrom:
+        - configMapRef:
+            name: code-server-config-map
+        ports:
+        - name: web-port 
+          containerPort: 8443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-server-svc
+  namespace: tammy-code-server
+  labels:
+    app: code-server
+    name: code-server-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: code-server
+    name: code-server-po
+  ports:
+  - name: svc-web-port
+    port: 8443
+    targetPort: web-port
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: code-server-ing
+  namespace: tammy-code-server
+  labels:
+    app: code-server
+    name: code-server-ing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: code-163.47.11.104.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: code-server-svc
+            port:
+              name: svc-web-port
