@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tammy-sts
+  namespace: tammy-mini-io
+  labels:
+    app: mini-io
+    name: mini-io-sts
+spec:
+  serviceName: mini-io-svc
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mini-io
+  template:
+    metadata:
+      labels:
+        app: mini-io
+    spec:
+      initContainers:
+      - name: mini-io-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c 
+        - "chown 1001:1001 /data"
+        volumeMounts:
+        - name: mini-io-data
+          mountPath: /data
+      containers:
+      - name: mini-io-container
+        image: bitnami/minio:2024.3.10
+        imagePullPolicy: IfNotPresent
+        command:
+        - minio
+        - server
+        - --address=:9000
+        - --console-address=:9090
+        - tammy-sts-{0...2}.tammy-mini-io.svc.cluster.local/data
+        volumeMounts:
+        - name: mini-io-data
+          mountPath: /data
+        ports:
+        - name: server-port
+          containerPort: 9000
+        - name: web-console
+          containerPort: 9090
+        envFrom:
+        - configMapRef:
+            name: mini-io-config-map
+        resources:
+          requests:
+            cpu: 200m
+            memory: 250Mi
+          limits:
+            cpu: 200m
+            memory: 250Mi
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: mini-io-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: do-block-storage
+      resources:
+        requests:
+          storage: 1Gi

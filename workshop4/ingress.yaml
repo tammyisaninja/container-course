@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tammy-minio-ingress
+  namespace: tammy-mini-io
+  labels:
+    app: mini-io
+    name: mini-io-ing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dat-163.47.11.104.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tammy-mini-io-svc
+            port:
+              name: server-port
+  - host: consol-163.47.11.104.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tammy-mini-io-svc
+            port:
+              name: web-console

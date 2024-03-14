@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mini-io-config-map
+  namespace: tammy-mini-io
+data:
+  MINIO_ROOT_USER: minio-root-user
+  MINIO_ROOT_PASSWORD: minio-root-password
+  MINIO_CI_CD: "true"
