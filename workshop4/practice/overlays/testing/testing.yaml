@@ -1,0 +1,118 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Namespace","metadata":{"annotations":{},"labels":{"dept":"eng","env":"test"},"name":"namespace1"}}
+    labels:
+      dept: eng
+      env: test
+    name: namespace1
+- apiVersion: v1
+  data:
+    INSTANCE_NAME: name from configmap
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"INSTANCE_NAME":"name from configmap"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"dept":"eng","env":"test"},"name":"test-dov-cm","namespace":"namespace1"}}
+    labels:
+      dept: eng
+      env: test
+    name: test-dov-cm
+    namespace: namespace1
+- apiVersion: v1
+  data:
+    INSTANCE_NAME: dGVzdA==
+  kind: Secret
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"INSTANCE_NAME":"dGVzdA=="},"kind":"Secret","metadata":{"annotations":{},"labels":{"dept":"eng","env":"test"},"name":"test-dov-secret","namespace":"namespace1"},"type":"Opaque"}
+    labels:
+      dept: eng
+      env: test
+    name: test-dov-secret
+    namespace: namespace1
+  type: Opaque
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"dov","dept":"eng","env":"test","name":"dov-svc"},"name":"test-dov-svc","namespace":"namespace1"},"spec":{"ports":[{"name":"svc-web-port","port":5000,"targetPort":"web-port"},{"name":"svc-metric-port","port":5100,"targetPort":"metric-port"}],"selector":{"app":"dov","dept":"eng","env":"test"},"type":"ClusterIP"}}
+    labels:
+      app: dov
+      dept: eng
+      env: test
+      name: dov-svc
+    name: test-dov-svc
+    namespace: namespace1
+  spec:
+    ports:
+    - name: svc-web-port
+      port: 5000
+      targetPort: web-port
+    - name: svc-metric-port
+      port: 5100
+      targetPort: metric-port
+    selector:
+      app: dov
+      dept: eng
+      env: test
+    type: ClusterIP
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"dept":"eng","env":"test","name":"dov-deploy"},"name":"test-dov-deploy","namespace":"namespace1"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"dov","dept":"eng","env":"test"}},"template":{"metadata":{"labels":{"app":"dov","dept":"eng","env":"test"},"name":"dov-po","namespace":"my-namespace"},"spec":{"containers":[{"env":[{"name":"INSTANCE_HASH","valueFrom":{"fieldRef":{"fieldPath":"status.podIP"}}}],"envFrom":[{"configMapRef":{"name":"test-dov-cm"}}],"image":"tammyisaninja/dov-bear:v5","imagePullPolicy":"IfNotPresent","livenessProbe":{"httpGet":{"path":"/healthz","port":"web-port"},"initialDelaySeconds":5,"periodSeconds":30},"name":"dov-container","ports":[{"containerPort":3000,"name":"web-port"},{"containerPort":3100,"name":"metrics-port"}]}]}}}}
+    labels:
+      dept: eng
+      env: test
+      name: dov-deploy
+    name: test-dov-deploy
+    namespace: namespace1
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: dov
+        dept: eng
+        env: test
+    template:
+      metadata:
+        labels:
+          app: dov
+          dept: eng
+          env: test
+        name: dov-po
+        namespace: my-namespace
+      spec:
+        containers:
+        - env:
+          - name: INSTANCE_HASH
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          envFrom:
+          - configMapRef:
+              name: test-dov-cm
+          image: tammyisaninja/dov-bear:v5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: web-port
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          name: dov-container
+          ports:
+          - containerPort: 3000
+            name: web-port
+          - containerPort: 3100
+            name: metrics-port
+kind: List
+metadata: {}

@@ -1,0 +1,42 @@
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+
+namespace: namespace1
+commonLabels:
+  env: test
+  dept: eng
+
+namePrefix: test-
+
+replicas:
+- name: dov-deploy
+  count: 1
+
+images:
+- name: tammyisaninja/dov-bear
+  newTag: v5
+
+configMapGenerator:
+- name: dov-cm
+  namespace: my-namespace
+  behavior: create
+  literals:
+  - INSTANCE_NAME="this is from kustomize"
+
+patches:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: dov-deploy
+  path: patch_deploy.yaml
+- target:
+    group: networking
+    version: v1
+    kind: Ingress
+    name: dov-ing
+  path: patch_ingress.yaml

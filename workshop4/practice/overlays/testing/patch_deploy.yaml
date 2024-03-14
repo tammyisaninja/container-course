@@ -1,0 +1,11 @@
+- op: "add"
+  path: /spec/template/spec
+  value: |
+    {
+      "volumes": [
+        {
+          "name": "my-vol",
+          "emptyDir": {}
+        }
+      ]
+    }
